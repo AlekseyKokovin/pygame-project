@@ -37,6 +37,9 @@ if __name__ == '__main__':
                 if event.key == pygame.K_p:
                     active_game = False if active_game else True
                     # pause/resume
-
+        if active_game:
+            pass
+            # проверить можно ли опустить на 1 клетку вниз
+            # tetris_class.active_figure.pos = tetris_class.active_figure.pos[0], tetris_class.active_figure.pos[1] + y y - длина клетки
         clock.tick(FPS)
     pygame.quit()
