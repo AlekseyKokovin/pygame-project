@@ -2,30 +2,57 @@ import pygame
 import random
 
 
-class create_figure:
+class figure:
 
     def __init__(self, color, x, y, type):
+        self.figure_blocks = []
         self.color = color
         self.form = figures_type[type]
         self.figure = []
         self.can_move = True
-        for block_x, block_y in self.form:
-            block = blocks(block_x + x, block_y + y, color, self.can_move)
-            self.figure.append(block)
-            all_blocks.append(block)
+        self.can_rotate = True
+        for i in self.form:
+            fig = []
+            for j in i:
+                if j != 0:
+                    block = blocks(i.index(j) + x, self.form.index(i) + y, color, self.can_move)
+                    fig.append(block)
+                    all_blocks.append(block)
+                    self.figure_blocks.append(block)
+                else:
+                    fig.append(0)
+            self.figure.append(fig)
+        self.the_lowerest = self.figure_blocks[-1]
 
     def update(self):
-        # if self.y + self.height <= 10 + board.height * board.cell_size
-        #     self.can_move = False
-        #     for elem in self.figure:
-        #         elem.can_move = self.can_move
-        pass
+        for block in self.figure_blocks:
+            block.update()
+        if self.the_lowerest.y + board.cell_size >= (board.height * board.cell_size) + 10:
+            for i in self.figure:
+                for j in i:
+                    if j != 0:
+                        j.can_move = False
+            self.can_move = False
 
     def rotate_left(self):
-        pass
+        for i in range(3):
+            self.rotate_right()
 
     def rotate_right(self):
-        pass
+        if self.can_rotate:
+            self.figure = list(zip(*self.figure[::-1]))
+
+    def left(self):
+        for i in self.figure:
+            for j in i:
+                if j != 0:
+                    j.change_block_pos(-1, 0)
+
+    def right(self):
+        for i in self.figure:
+            for j in i:
+                if j != 0:
+                    j.change_block_pos(1, 0)
 
 
 class blocks:
@@ -45,13 +72,17 @@ class blocks:
         if self.can_move:
             self.y += self.speed * self.clock.tick() / 1000
 
+    def change_block_pos(self, x, y):
+        self.y += y * self.height
+        self.x += x * self.width
+
 
 class Board:
 
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.board = [[0] * width for _ in range(height)]
+        self.board = [[0 for _ in range(width)] for _ in range(height)]
         self.left = 100
         self.top = 10
         self.cell_size = 40
@@ -93,17 +124,19 @@ colors = {'blue': ((0, 0, 100), (0, 0, 255)),
           'red': ((100, 0, 0), (255, 0, 0))}
 
 figures_type = {
-    't': [(0, 0), (0, 1), (0, 2), (1, 1)],
-    'i': [(0, 0), (0, 1), (0, 2), (0, 3)],
-    'z': [(0, 0), (0, 1), (1, 1), (1, 2)],
-    'l': [(0, 0), (0, 1), (0, 2), (1, 2)],
-    'o': [(0, 0), (0, 1), (1, 0), (1, 1)]
+    't': [(0, 0, 0), (1, 2, 3), (0, 1, 0)],
+    'i': [(0, 1, 0), (0, 1, 0), (0, 1, 0)],
+    'z': [(0, 0, 1), (0, 1, 2), (0, 1, 0)],
+    'l': [(0, 1, 0), (0, 1, 0), (0, 1, 2)],
+    'o': [(0, 1, 2), (0, 1, 2), (0, 0, 0)]
 }
 
+figures = []
 all_blocks = []
-create_figure(random.choice(['blue', 'green', 'red']), 0, 0, 'z')
-create_figure(random.choice(['blue', 'green', 'red']), 1, -2, 't')
-create_figure(random.choice(['blue', 'green', 'red']), 2, 0, 'l')
+
+a = figure(random.choice(['blue', 'green', 'red']), 0, 0, 'z')
+figures.append(a)
+
 running = True
 while running:
     for event in pygame.event.get():
@@ -111,6 +144,6 @@ while running:
             running = False
     screen.fill('black')
     board.render(screen)
-    for elem in all_blocks:
+    for elem in figures:
         elem.update()
     pygame.display.flip()
