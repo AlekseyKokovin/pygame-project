@@ -10,7 +10,7 @@ class figure:
         self.form = figures_type[type]
         self.figure = []
         self.can_move = True
-        self.can_rotate = True
+        self.can_rotate = type != 'o'
         for i in self.form:
             fig = []
             for j in i:
@@ -22,19 +22,44 @@ class figure:
                 else:
                     fig.append(0)
             self.figure.append(fig)
-        self.the_lowerest = self.figure_blocks[-1]
+
+        self.stop_row = [0, 0, 0]
 
     def update(self):
+
+        self.stop_row = [0, 0, 0]
+        for i in range(len(self.figure)):
+            for j in range(len(self.figure[i])):
+                if self.figure[i][j] != 0:
+                    self.stop_row[i] = self.figure[i][j]
+
         for block in self.figure_blocks:
             block.update()
-        if self.the_lowerest.y + board.cell_size >= (board.height * board.cell_size) + 10 and self.can_move:
+
+        stop_by_block = False
+        for i in self.stop_row:
+            if i != 0:
+                try:
+                    if board.board[i.coord_y() + 1][i.coord_x()]:
+                        stop_by_block = True
+                except IndexError:
+                    stop_by_block = True
+
+        if stop_by_block and self.can_move:
             for i in self.figure:
                 for j in i:
                     if j != 0:
                         j.can_move = False
-                        board.board[j.coord_y()][j.coord_x()] = 1
-            print(*board.board, sep='\n')
+                        board.board[j.coord_y()][j.coord_x()] = j
             self.can_move = False
+
+        for i in range(len(board.board)):
+            if all(board.board[i]):
+                for j in range(len(board.board[i])):
+                    del board.board[i][j]
+                    board.board[i][j] = 0
+                    for elem in figures:
+                        elem.update()
 
     def rotate_left(self):
         for i in range(3):
@@ -45,16 +70,37 @@ class figure:
             self.figure = list(zip(*self.figure[::-1]))
 
     def left(self):
+        can_do = True
         for i in self.figure:
             for j in i:
                 if j != 0:
-                    j.change_block_pos(-1, 0)
+                    try:
+                        if board.board[j.coord_y()][j.coord_x() - 1] != 0:
+                            can_do = False
+                    except IndexError:
+                        can_do = False
+
+        if can_do:
+            for i in self.figure:
+                for j in i:
+                    if j != 0:
+                        j.change_block_pos(-1, 0)
 
     def right(self):
+        can_do = True
         for i in self.figure:
             for j in i:
                 if j != 0:
-                    j.change_block_pos(1, 0)
+                    try:
+                        if board.board[j.coord_y()][j.coord_x() - 1] != 0:
+                            can_do = False
+                    except IndexError:
+                        can_do = False
+        if can_do:
+            for i in self.figure:
+                for j in i:
+                    if j != 0:
+                        j.change_block_pos(1, 0)
 
 
 class blocks:
@@ -69,6 +115,7 @@ class blocks:
         self.y = 10 - self.height * 4 + self.height * y
         self.speed = self.height
         self.can_move = can_move
+        self.block_deleted = False
 
     def update(self):
         if self.can_move:
@@ -145,7 +192,13 @@ figures_type = {
 figures = []
 all_blocks = []
 
-a = figure(random.choice(list(colors.keys())), 0, 0, 'z')
+a = figure(random.choice(list(colors.keys())), -1, 0, 'o')
+figures.append(a)
+a = figure(random.choice(list(colors.keys())), 1, -1, 'o')
+figures.append(a)
+a = figure(random.choice(list(colors.keys())), 3, -2, 'o')
+figures.append(a)
+a = figure(random.choice(list(colors.keys())), 5, -3, 'o')
 figures.append(a)
 
 running = True
