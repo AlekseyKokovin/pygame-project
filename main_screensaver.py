@@ -14,7 +14,7 @@ def start_screen(screen, screen_width, screen_height):
     music_choose_rect = pygame.Rect(screen_width // 2 + 75, 155, 96, 96)
     music_choose_image = pygame.image.load("data/settings.png")
 
-    buttons = {0: (10, 20), 1: (12, 24), 2: {8, 16}, 3: (10, 10)}
+    buttons = {0: (10, 15), 1: (12, 15), 2: {8, 15}, 3: (10, 10)}
     button_width, button_height = 150, 50
     buttons_coords = [(10, 100), (170, 100), (330, 100), (490, 100)]
     buttons_texts = ['10X20', '12X24', '8X16', '10X10']
@@ -48,6 +48,7 @@ def start_screen(screen, screen_width, screen_height):
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.mixer.music.stop()
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if music_choose_rect.collidepoint(event.pos):
@@ -58,7 +59,8 @@ def start_screen(screen, screen_width, screen_height):
                     current_song_index = -1
                     pygame.mixer.music.stop()
                 if play_rect.collidepoint(event.pos):
-                    return buttons[button_pressed if 0 <= button_pressed <= 3 else 0], play_songs
+                    pygame.mixer.music.stop()
+                    return buttons[button_pressed if 0 <= button_pressed <= 3 else 0], play_songs, volume
                 if image_rect.collidepoint(event.pos):
                     volume = 1 if volume == 0.66 else volume + 0.33 if volume < 1 else 0
                     image = pygame.image.load(f"volume/{pictures[int(volume / 0.33)]}.png")
@@ -137,4 +139,3 @@ def start_screen(screen, screen_width, screen_height):
                 pygame.mixer.music.play()
 
         pygame.display.flip()
-    pygame.quit()

@@ -1,8 +1,15 @@
+from pprint import pprint
+
+import pygame
+import random
+
+from main_screensaver import start_screen
+
 import pygame
 import random
 
 
-class Figure:
+class figure:
 
     def __init__(self, color, x, y, type):
         self.figure_blocks = []
@@ -15,7 +22,7 @@ class Figure:
             fig = []
             for j in i:
                 if j != 0:
-                    block = Blocks(i.index(j) + x, self.form.index(i) + y, color, self.can_move)
+                    block = blocks(i.index(j) + x, self.form.index(i) + y, color, self.can_move)
                     fig.append(block)
                     all_blocks.append(block)
                     self.figure_blocks.append(block)
@@ -38,7 +45,7 @@ class Figure:
 
         stop_by_block = False
         for i in self.stop_row:
-            if i != 0:
+            if i:
                 try:
                     if board.board[i.coord_y() + 1][i.coord_x()]:
                         stop_by_block = True
@@ -48,7 +55,7 @@ class Figure:
         if stop_by_block and self.can_move:
             for i in self.figure:
                 for j in i:
-                    if j != 0:
+                    if j:
                         j.can_move = False
                         board.board[j.coord_y()][j.coord_x()] = j
             self.can_move = False
@@ -104,7 +111,7 @@ class Figure:
                         j.change_block_pos(1, 0)
 
 
-class Blocks:
+class blocks:
 
     def __init__(self, x, y, color, can_move):
         self.clock = pygame.time.Clock()
@@ -178,13 +185,12 @@ def update_all_blocks():
         del all_blocks[index]
 
 
-def form_choice(x, y):
+def form_choice(x):
     for_choice = ['i']
-    if 1 <= x <= 7:
+    if 1 <= x <= board_x - 1:
         for_choice.append('t')
-    if x <= 7:
+    if x <= board_x - 1:
         for_choice.append('o')
-        for_choice.append('l')
         for_choice.append('l')
     return for_choice
 
@@ -199,54 +205,69 @@ colors = {'blue': ((0, 0, 100), (0, 0, 255)),
 figures_type = {
     't': [(0, 0, 0), (16, 17, 18), (0, 19, 0)],
     'i': [(0, 13, 0), (0, 14, 0), (0, 15, 0)],
-    'z': [(0, 0, 9), (0, 10, 11), (0, 12, 0)],
     'l': [(0, 5, 0), (0, 6, 0), (0, 7, 8)],
     'o': [(0, 1, 2), (0, 3, 4), (0, 0, 0)]
 }
 if __name__ == '__main__':
     pygame.init()
-    size = width, height = 500, 500
-    board_x = 8
-    board_y = 12
-    board = Board(board_x, board_y)
-    screen = pygame.display.set_mode(size)
-    clock = pygame.time.Clock()
-    running = True
-    active_game = False
-    figures = []
-    all_blocks = []
-    x, y = random.choice(range(0, 8)), random.choice(range(0, 12))
-    print(board.board)
-    for_choice = form_choice(x, y)
-    a = Figure(random.choice(list(colors.keys())), x, y, random.choice(for_choice))
-    figures.append(a)
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pass  # вовращаемся на заставку
-                if event.key == pygame.K_UP and active_game:
-                    pass
-                    # tetris_class.rotate(tetris_class.active_figure) rotate - функция поворота фигуры, active_figure - фигура, которая спускается
-                if event.key == pygame.K_DOWN and active_game:
-                    pass
-                    # tetris_class.active_figure.pos = tetris_class.active_figure.pos[0], tetris_class.active_figure.pos[1] + y y - длина клетки
-                if event.key == pygame.K_RIGHT and active_game:
-                    pass
-                    # if фигура не должна быть в самом краю справа
-                    # tetris_class.active_figure.pos = tetris_class.active_figure.pos[0] + x, tetris_class.active_figure.pos[1] x - ширина клетки
-                if event.key == pygame.K_LEFT and active_game:
-                    pass
-                    # if фигура не должна быть в самом краю слева
-                    # tetris_class.active_figure.pos = tetris_class.active_figure.pos[0] - x, tetris_class.active_figure.pos[1] x - ширина клетки
-                if event.key == pygame.K_p:
-                    active_game = False if active_game else True
-                    # pause/resume
-        screen.fill('black')
-        update_all_blocks()
-        board.render(screen)
-        for elem in figures:
-            elem.update()
-        pygame.display.flip()
+    size = width, height = 650, 650
+    music = screen = pygame.display.set_mode(size)
+    a = start_screen(screen, width, height)
+    if a:
+        x_and_y, play_songs, volume = a
+        if play_songs:
+            current_song_index = 0
+            pygame.mixer.music.load(f"Music/music{play_songs[current_song_index]}.mp3")
+            pygame.mixer.music.set_volume(volume)
+            pygame.mixer.music.play(-1)
+            pygame.mixer.music.play()
+        board_x, board_y = x_and_y
+        board = Board(board_x, board_y)
+        current_song_index = 0
+        clock = pygame.time.Clock()
+        running = True
+        figures = []
+        all_blocks = []
+        x = random.choice(range(0, board_x))
+        for_choice = form_choice(x)
+        a = figure(random.choice(list(colors.keys())), x, 0, 't')
+        figures.append(a)
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+                    if event.key == pygame.K_UP:
+                        a.rotate_left()
+                    if event.key == pygame.K_DOWN:
+                        pass
+                        # tetris_class.active_figure.pos = tetris_class.active_figure.pos[0], tetris_class.active_figure.pos[1] + y y - длина клетки
+                    if event.key == pygame.K_RIGHT:
+                        a.right()
+                    if event.key == pygame.K_LEFT:
+                        a.left()
+            color_start = pygame.Color('Black')
+            color_end = (139, 0, 139)
+            for y in range(height):
+                r = int((color_end[0] - color_start[0]) * (y / height) + color_start[0])
+                g = int((color_end[1] - color_start[1]) * (y / height) + color_start[1])
+                b = int((color_end[2] - color_start[2]) * (y / height) + color_start[2])
+                pygame.draw.rect(screen, (r, g, b), pygame.Rect(0, y, width, 1))
+            board.render(screen)
+            if not a.can_move:
+                x = random.choice(range(0, board_x))
+                for_choice = form_choice(x)
+                a = figure(random.choice(list(colors.keys())), x, 0, random.choice(for_choice))
+                figures.append(a)
+            for elem in figures:
+                elem.update()
+            if not pygame.mixer.music.get_busy() and play_songs:
+                current_song_index = (current_song_index + 1) % len(play_songs)
+                pygame.mixer.music.load(f"Music/music{play_songs[current_song_index]}.mp3")
+                pygame.mixer.music.set_volume(volume)
+                pygame.mixer.music.play(-1)
+                pygame.mixer.music.play()
+            update_all_blocks()
+            pygame.display.flip()

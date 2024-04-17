@@ -113,4 +113,3 @@ def music(screen, screen_width, screen_height):
         screen.blit(exit_image, (10, 0))
 
         pygame.display.flip()
-    pygame.quit()
