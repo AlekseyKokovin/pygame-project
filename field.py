@@ -1,8 +1,3 @@
-from pprint import pprint
-
-import pygame
-import random
-
 from main_screensaver import start_screen
 
 import pygame
@@ -75,6 +70,29 @@ class figure:
 
     def rotate_right(self):
         if self.can_rotate:
+            for y, row in enumerate(self.figure):
+                for x, block in enumerate(row):
+                    if block:
+                        if x == 0 and y == 0:
+                            block.x += board.cell_size * 2
+                        elif x == 1 and y == 0:
+                            block.x += board.cell_size
+                            block.y += board.cell_size
+                        elif x == 2 and y == 0:
+                            block.y += board.cell_size * 2
+                        elif x == 2 and y == 1:
+                            block.x -= board.cell_size
+                            block.y += board.cell_size
+                        elif x == 2 and y == 2:
+                            block.x -= board.cell_size * 2
+                        elif x == 1 and y == 2:
+                            block.x -= board.cell_size
+                            block.y -= board.cell_size
+                        elif x == 0 and y == 2:
+                            block.y -= board.cell_size * 2
+                        elif x == 0 and y == 1:
+                            block.x += board.cell_size
+                            block.y -= board.cell_size
             self.figure = list(zip(*self.figure[::-1]))
 
     def left(self):
@@ -83,6 +101,8 @@ class figure:
             for j in i:
                 if j != 0:
                     try:
+                        if j.coord_x() - 1 < 0:
+                            raise IndexError
                         if board.board[j.coord_y()][j.coord_x() - 1] != 0:
                             can_do = False
                     except IndexError:
@@ -100,7 +120,7 @@ class figure:
             for j in i:
                 if j != 0:
                     try:
-                        if board.board[j.coord_y()][j.coord_x() - 1] != 0:
+                        if board.board[j.coord_y()][j.coord_x() + 1] != 0:
                             can_do = False
                     except IndexError:
                         can_do = False
@@ -135,8 +155,6 @@ class blocks:
         self.x += x * self.width
 
     def coord_x(self):
-        print(int((self.x - board.left) // self.width))
-        print(self.x, self.color)
         return int((self.x - board.left) // self.width)
 
     def coord_y(self):
@@ -195,6 +213,7 @@ def form_choice(x):
     if x <= board_x - 1:
         for_choice.append('o')
         for_choice.append('l')
+        for_choice.append('z')
     return for_choice
 
 
@@ -208,6 +227,7 @@ colors = {'blue': ((0, 0, 100), (0, 0, 255)),
 figures_type = {
     't': [(0, 0, 0), (16, 17, 18), (0, 19, 0)],
     'i': [(0, 13, 0), (0, 14, 0), (0, 15, 0)],
+    'z': [(0, 0, 9), (0, 10, 11), (0, 12, 0)],
     'l': [(0, 5, 0), (0, 6, 0), (0, 7, 8)],
     'o': [(0, 1, 2), (0, 3, 4), (0, 0, 0)]
 }
@@ -243,10 +263,7 @@ if __name__ == '__main__':
                     if event.key == pygame.K_ESCAPE:
                         running = False
                     if event.key == pygame.K_UP:
-                        a.rotate_left()
-                    if event.key == pygame.K_DOWN:
-                        pass
-                        # tetris_class.active_figure.pos = tetris_class.active_figure.pos[0], tetris_class.active_figure.pos[1] + y y - длина клетки
+                        a.rotate_right()
                     if event.key == pygame.K_RIGHT:
                         a.right()
                     if event.key == pygame.K_LEFT:
