@@ -118,8 +118,9 @@ class blocks:
         self.color = colors[color]
         self.block_coords = self.width, self.height = 40, 40
 
-        self.x = 100 + x * self.width
-        self.y = 10 - self.height * 4 + self.height * y
+        self.x = board.left + min(max(x, 0), board.width - 1) * self.width
+        self.y = board.top - self.height * 4 + min(max(y, 0), board.height - 1) * self.height
+
         self.speed = self.height
         self.can_move = can_move
         self.need_delete = False
@@ -134,10 +135,12 @@ class blocks:
         self.x += x * self.width
 
     def coord_x(self):
-        return int((self.x - 100) // self.width)
+        print(int((self.x - board.left) // self.width))
+        print(self.x, self.color)
+        return int((self.x - board.left) // self.width)
 
     def coord_y(self):
-        return int((self.y - 10) // self.height)
+        return int((self.y - board.top) // self.height)
 
 
 class Board:
@@ -230,7 +233,7 @@ if __name__ == '__main__':
         all_blocks = []
         x = random.choice(range(0, board_x))
         for_choice = form_choice(x)
-        a = figure(random.choice(list(colors.keys())), x, 0, 't')
+        a = figure(random.choice(list(colors.keys())), x, 0, random.choice(for_choice))
         figures.append(a)
         while running:
             for event in pygame.event.get():
