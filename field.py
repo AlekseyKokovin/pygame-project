@@ -64,12 +64,24 @@ class figure:
                 board.board[i][j].need_delete = True
                 board.board[i][j] = 0
 
-    def rotate_left(self):
-        for i in range(3):
-            self.rotate_right()
+    def can_rotate_figure(self):
+        new_figure = list(zip(*self.figure[::-1]))
+        for y, row in enumerate(new_figure):
+            for x, block in enumerate(row):
+                if block:
+                    new_x = self.figure_blocks[0].coord_x() + x
+                    new_y = self.figure_blocks[0].coord_y() + y
+                    if new_x < 0 or new_x >= board_x or new_y >= board_y:
+                        return False
+                    try:
+                        if board.board[new_y][new_x] != 0:
+                            return False
+                    except IndexError:
+                        return False
+        return True
 
     def rotate_right(self):
-        if self.can_rotate:
+        if self.can_rotate and self.can_rotate_figure():
             for y, row in enumerate(self.figure):
                 for x, block in enumerate(row):
                     if block:
@@ -120,6 +132,8 @@ class figure:
             for j in i:
                 if j != 0:
                     try:
+                        if j.coord_x() + 1 >= board_x:
+                            raise IndexError
                         if board.board[j.coord_y()][j.coord_x() + 1] != 0:
                             can_do = False
                     except IndexError:
@@ -207,10 +221,10 @@ def update_all_blocks():
 
 
 def form_choice(x):
-    for_choice = ['i']
-    if 1 <= x <= board_x - 1:
+    for_choice = []
+    if x <= board_x - 3:
+        for_choice.append('i')
         for_choice.append('t')
-    if x <= board_x - 1:
         for_choice.append('o')
         for_choice.append('l')
         for_choice.append('z')
@@ -231,43 +245,61 @@ figures_type = {
     'l': [(0, 5, 0), (0, 6, 0), (0, 7, 8)],
     'o': [(0, 1, 2), (0, 3, 4), (0, 0, 0)]
 }
+
+
+def check_game_end():
+    for block in board.board[0]:
+        if block:
+            return True
+    return False
+
+
 if __name__ == '__main__':
     pygame.init()
     size = width, height = 650, 650
     music = screen = pygame.display.set_mode(size)
-    a = start_screen(screen, width, height)
-    if a:
+
+    running = True
+    while running:
+        a = start_screen(screen, width, height)
+        if not a:
+            break
+
         x_and_y, play_songs, volume = a
         if play_songs:
             current_song_index = 0
             pygame.mixer.music.load(f"Music/music{play_songs[current_song_index]}.mp3")
             pygame.mixer.music.set_volume(volume)
             pygame.mixer.music.play(-1)
-            pygame.mixer.music.play()
+
         board_x, board_y = x_and_y
         board = Board(board_x, board_y)
-        current_song_index = 0
         clock = pygame.time.Clock()
-        running = True
         figures = []
         all_blocks = []
-        x = random.choice(range(0, board_x))
+
+        x = random.choice(range(0, board_x - 2))
         for_choice = form_choice(x)
         a = figure(random.choice(list(colors.keys())), x, 0, random.choice(for_choice))
         figures.append(a)
-        while running:
+
+        game_over = False
+        while not game_over:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                    game_over = True
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
+                        game_over = True
                     if event.key == pygame.K_UP:
                         a.rotate_right()
                     if event.key == pygame.K_RIGHT:
                         a.right()
                     if event.key == pygame.K_LEFT:
                         a.left()
+
             color_start = pygame.Color('Black')
             color_end = (139, 0, 139)
             for y in range(height):
@@ -275,19 +307,32 @@ if __name__ == '__main__':
                 g = int((color_end[1] - color_start[1]) * (y / height) + color_start[1])
                 b = int((color_end[2] - color_start[2]) * (y / height) + color_start[2])
                 pygame.draw.rect(screen, (r, g, b), pygame.Rect(0, y, width, 1))
+
             board.render(screen)
+
             if not a.can_move:
-                x = random.choice(range(0, board_x))
+                x = random.choice(range(0, board_x - 2))
                 for_choice = form_choice(x)
                 a = figure(random.choice(list(colors.keys())), x, 0, random.choice(for_choice))
                 figures.append(a)
+
+                if check_game_end():
+                    game_over = True
+                    break
+
             for elem in figures:
                 elem.update()
+
             if not pygame.mixer.music.get_busy() and play_songs:
                 current_song_index = (current_song_index + 1) % len(play_songs)
                 pygame.mixer.music.load(f"Music/music{play_songs[current_song_index]}.mp3")
                 pygame.mixer.music.set_volume(volume)
                 pygame.mixer.music.play(-1)
-                pygame.mixer.music.play()
+
             update_all_blocks()
             pygame.display.flip()
+
+        if not running:
+            break
+
+pygame.quit()
