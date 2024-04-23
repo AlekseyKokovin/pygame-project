@@ -46,6 +46,7 @@ class Figure:
                 for j in i:
                     if j:
                         j.can_move = False
+                        j.y = j.coord_y() * 40 + 10
                         board.board[j.coord_y()][j.coord_x()] = j
             self.can_move = False
 
@@ -127,8 +128,7 @@ class Figure:
                     try:
                         if j.coord_x() - 1 < 0:
                             raise IndexError
-                        y_pos = int((j.y - board.top) // j.height)
-                        if board.board[y_pos][j.coord_x() - 1] != 0:
+                        if board.board[j.coord_y()][j.coord_x() - 1] != 0:
                             can_do = False
                     except IndexError:
                         can_do = False
@@ -147,8 +147,7 @@ class Figure:
                     try:
                         if j.coord_x() + 1 >= board_x:
                             raise IndexError
-                        y_pos = int((j.y - board.top) // j.height)
-                        if board.board[y_pos][j.coord_x() + 1] != 0:
+                        if board.board[j.coord_y()][j.coord_x() + 1] != 0:
                             can_do = False
                     except IndexError:
                         can_do = False
