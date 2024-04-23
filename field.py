@@ -1,10 +1,12 @@
+from math import ceil
+
 from main_screensaver import start_screen
 
 import pygame
 import random
 
 
-class figure:
+class Figure:
 
     def __init__(self, color, x, y, type):
         self.figure_blocks = []
@@ -17,7 +19,7 @@ class figure:
             fig = []
             for j in i:
                 if j != 0:
-                    block = blocks(i.index(j) + x, self.form.index(i) + y, color, self.can_move)
+                    block = Blocks(i.index(j) + x, self.form.index(i) + y, color, self.can_move)
                     fig.append(block)
                     all_blocks.append(block)
                     self.figure_blocks.append(block)
@@ -25,27 +27,19 @@ class figure:
                     fig.append(0)
             self.figure.append(fig)
 
-        self.stop_row = [0, 0, 0]
-
     def update(self):
-
-        self.stop_row = [0, 0, 0]
-        for i in range(len(self.figure)):
-            for j in range(len(self.figure[i])):
-                if self.figure[i][j] != 0:
-                    self.stop_row[i] = self.figure[i][j]
 
         for block in self.figure_blocks:
             block.update()
 
         stop_by_block = False
-        for i in self.stop_row:
-            if i:
-                try:
-                    if board.board[i.coord_y() + 1][i.coord_x()]:
-                        stop_by_block = True
-                except IndexError:
-                    stop_by_block = True
+        for block in self.figure_blocks:
+            if not block:
+                continue
+            target_y = block.coord_y() + 1
+            if target_y >= board.height or \
+                    (target_y >= 0 and board.board[target_y][block.coord_x()]):
+                stop_by_block = True
 
         if stop_by_block and self.can_move:
             for i in self.figure:
@@ -65,18 +59,36 @@ class figure:
                 board.board[i][j] = 0
 
     def can_rotate_figure(self):
-        new_figure = list(zip(*self.figure[::-1]))
-        for y, row in enumerate(new_figure):
+        for y, row in enumerate(self.figure):
             for x, block in enumerate(row):
                 if block:
-                    new_x = self.figure_blocks[0].coord_x() + x
-                    new_y = self.figure_blocks[0].coord_y() + y
-                    if new_x < 0 or new_x >= board_x or new_y >= board_y:
-                        return False
-                    try:
-                        if board.board[new_y][new_x] != 0:
-                            return False
-                    except IndexError:
+                    new_x, new_y = 140, 50
+                    if x == 0 and y == 0:
+                        new_x = block.x + board.cell_size * 2
+                    elif x == 1 and y == 0:
+                        new_x = block.x + board.cell_size
+                        new_y = block.y + board.cell_size
+                    elif x == 2 and y == 0:
+                        new_y = block.y + board.cell_size * 2
+                    elif x == 2 and y == 1:
+                        new_x = block.x - board.cell_size
+                        new_y = block.y + board.cell_size
+                    elif x == 2 and y == 2:
+                        new_x = block.x - board.cell_size * 2
+                    elif x == 1 and y == 2:
+                        new_x = block.x - board.cell_size
+                        new_y = block.y - board.cell_size
+                    elif x == 0 and y == 2:
+                        new_y = block.y - board.cell_size * 2
+                    elif x == 0 and y == 1:
+                        new_x = block.x + board.cell_size
+                        new_y = block.y - board.cell_size
+                    y_pos = (new_y - board.top) / 40
+                    if int(y_pos) != y_pos:
+                        y_pos = int(y_pos) + 1
+                    y_pos = int(y_pos)
+                    new_x, new_y = int((new_x - board.left) // 40), int((new_y - board.top) // 40)
+                    if new_x < 0 or new_x >= board_x or y_pos >= board_x or (new_y >= 0 and board.board[new_y][new_x] != 0):
                         return False
         return True
 
@@ -115,7 +127,8 @@ class figure:
                     try:
                         if j.coord_x() - 1 < 0:
                             raise IndexError
-                        if board.board[j.coord_y()][j.coord_x() - 1] != 0:
+                        y_pos = int((j.y - board.top) // j.height)
+                        if board.board[y_pos][j.coord_x() - 1] != 0:
                             can_do = False
                     except IndexError:
                         can_do = False
@@ -134,7 +147,8 @@ class figure:
                     try:
                         if j.coord_x() + 1 >= board_x:
                             raise IndexError
-                        if board.board[j.coord_y()][j.coord_x() + 1] != 0:
+                        y_pos = int((j.y - board.top) // j.height)
+                        if board.board[y_pos][j.coord_x() + 1] != 0:
                             can_do = False
                     except IndexError:
                         can_do = False
@@ -145,7 +159,7 @@ class figure:
                         j.change_block_pos(1, 0)
 
 
-class blocks:
+class Blocks:
 
     def __init__(self, x, y, color, can_move):
         self.clock = pygame.time.Clock()
@@ -280,7 +294,7 @@ if __name__ == '__main__':
 
         x = random.choice(range(0, board_x - 2))
         for_choice = form_choice(x)
-        a = figure(random.choice(list(colors.keys())), x, 0, random.choice(for_choice))
+        a = Figure(random.choice(list(colors.keys())), x, 0, random.choice(for_choice))
         figures.append(a)
 
         game_over = False
@@ -289,6 +303,7 @@ if __name__ == '__main__':
                 if event.type == pygame.QUIT:
                     running = False
                     game_over = True
+                    pygame.mixer.music.stop()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         running = False
@@ -299,6 +314,8 @@ if __name__ == '__main__':
                         a.right()
                     if event.key == pygame.K_LEFT:
                         a.left()
+                    if event.key == pygame.K_UP:
+                        a.update()
 
             color_start = pygame.Color('Black')
             color_end = (139, 0, 139)
@@ -313,11 +330,12 @@ if __name__ == '__main__':
             if not a.can_move:
                 x = random.choice(range(0, board_x - 2))
                 for_choice = form_choice(x)
-                a = figure(random.choice(list(colors.keys())), x, 0, random.choice(for_choice))
+                a = Figure(random.choice(list(colors.keys())), x, 0, random.choice(for_choice))
                 figures.append(a)
 
                 if check_game_end():
                     game_over = True
+                    pygame.mixer.music.stop()
                     break
 
             for elem in figures:
