@@ -40,7 +40,6 @@ def start_screen(screen, screen_width, screen_height):
 
     left_arrow = pygame.image.load("rules/arrow_left.png")
     right_arrow = pygame.image.load("rules/arrow_right.png")
-    down_arrow = pygame.image.load("rules/arrow_down.png")
     up_arrow = pygame.image.load("rules/arrow_up.png")
 
     running = True
@@ -95,19 +94,14 @@ def start_screen(screen, screen_width, screen_height):
 
         screen.blit(play, play_rect)
 
-        screen.blit(down_arrow, (35, 330))
-        text = button_font.render(' - спустить фигуру на одну клетку', True, (123, 104, 238))
+        screen.blit(left_arrow, (35, 330))
+        text = button_font.render(' - подвинуть фигуру на одну клетку влево', True, (123, 104, 238))
         text_rect = pygame.Rect(120, 360, 96, 96)
         screen.blit(text, text_rect)
 
-        screen.blit(left_arrow, (35, 410))
-        text = button_font.render(' - подвинуть фигуру на одну клетку влево', True, (123, 104, 238))
-        text_rect = pygame.Rect(120, 440, 96, 96)
-        screen.blit(text, text_rect)
-
-        screen.blit(right_arrow, (35, 490))
+        screen.blit(right_arrow, (35, 410))
         text = button_font.render(' - подвинуть фигуру на одну клетку вправо', True, (123, 104, 238))
-        text_rect = pygame.Rect(120, 520, 96, 96)
+        text_rect = pygame.Rect(120, 440, 96, 96)
         screen.blit(text, text_rect)
 
         for button in range(4):
